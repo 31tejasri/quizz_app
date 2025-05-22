@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quiz App - Quizz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap');
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Rubik', sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    color: #fff;
+  }
+  #app {
+    background: #1f1f38;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    padding: 30px 40px;
+  }
+  h1 {
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  label {
+    display: block;
+    margin-top: 20px;
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'Rubik', sans-serif;
+  }
+  button {
+    margin-top: 25px;
+    background: #764ba2;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 4px 15px rgba(118,75,162,0.6);
+  }
+  button:hover {
+    background: #927adb;
+  }
+  #quiz-container {
+    margin-top: 30px;
+  }
+  #question-number {
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+  #question {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  #answers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #answers li {
+    margin-bottom: 12px;
+  }
+  #answers button {
+    width: 100%;
+    background: #2c2c54;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.3s ease;
+    box-shadow: 0 2px 8px rgba(44,44,84,0.7);
+  }
+  #answers button:hover {
+    background: #483d8b;
+  }
+  #answers button.correct {
+    background: #28a745;
+    cursor: default;
+    box-shadow: 0 2px 12px #28a745cc;
+  }
+  #answers button.wrong {
+    background: #dc3545;
+    cursor: default;
+    box-shadow: 0 2px 12px #dc3545cc;
+  }
+  #next-btn {
+    margin-top: 25px;
+    background: #28a745;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 4px 15px #28a745cc;
+  }
+  #next-btn:hover {
+    background: #3ee678;
+  }
+  #score-container {
+    text-align: center;
+    margin-top: 30px;
+  }
+  #score-container h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+  #score-container button {
+    background: #764ba2;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(118,75,162,0.6);
+    margin-top: 10px;
+  }
+  #loading {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 30px;
+    min-height: 50px;
+  }
+  footer {
+    text-align: center;
+    margin-top: 50px;
+    color: #b1aed4;
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Quiz App</h1>
+  <div id="setup-container">
+    <label for="category">Select a Category (Section of Education):</label>
+    <select id="category">
+      <option value="">Loading categories...</option>
+    </select>
+    <button id="start-btn">Start Quiz</button>
+  </div>
+
+  <div id="loading"></div>
+
+  <div id="quiz-container" hidden>
+    <div id="question-number"></div>
+    <div id="question"></div>
+    <ul id="answers"></ul>
+    <button id="next-btn">Next Question</button>
+  </div>
+
+  <div id="score-container" hidden>
+    <h2>Your Score: <span id="score"></span> / <span id="total"></span></h2>
+    <button id="restart-btn">Restart Quiz</button>
+  </div>
+</div>
+
+<footer>
+
+</footer>
+
+<script>
+  // Elements
+  const categorySelect = document.getElementById('category');
+  const startBtn = document.getElementById('start-btn');
+  const setupContainer = document.getElementById('setup-container');
+  const loadingContainer = document.getElementById('loading');
+  const quizContainer = document.getElementById('quiz-container');
+  const questionNumber = document.getElementById('question-number');
+  const questionText = document.getElementById('question');
+  const answersList = document.getElementById('answers');
+  const nextBtn = document.getElementById('next-btn');
+  const scoreContainer = document.getElementById('score-container');
+  const scoreText = document.getElementById('score');
+  const totalText = document.getElementById('total');
+  const restartBtn = document.getElementById('restart-btn');
+
+  // Quiz state
+  let questions = [];
+  let currentQuestionIndex = 0;
+  let score = 0;
+
+  // Fetch categories from Open Trivia Database
+  async function loadCategories() {
+    try {
+      const res = await fetch('https://opentdb.com/api_category.php');
+      const data = await res.json();
+      const categories = data.trivia_categories;
+      categorySelect.innerHTML = '<option value="">Choose category</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name;
+        categorySelect.appendChild(option);
+      });
+    } catch (e) {
+      categorySelect.innerHTML = '<option value="">Failed to load categories</option>';
+      console.error('Failed to load categories:', e);
+    }
+  }
+
+  // Decode HTML entities in API questions/answers
+  function decodeHTML(html) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
+  // Shuffle array - Fisher-Yates shuffle
+  function shuffleArray(array) {
+    for(let i = array.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // Start quiz by fetching questions from API based on category
+  async function startQuiz() {
+    const categoryId = categorySelect.value;
+    if (!categoryId) {
+      alert('Please select a category to start the quiz.');
+      return;
+    }
+
+    setupContainer.hidden = true;
+    scoreContainer.hidden = true;
+    quizContainer.hidden = true;
+    loadingContainer.textContent = 'Loading quiz questions...';
+
+    try {
+      // Fetch 10 questions in selected category, difficulty can be any, type multiple choice
+      const apiUrl = `https://opentdb.com/api.php?amount=10&category=${categoryId}&type=multiple`;
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+
+      if (data.response_code !== 0 || !data.results.length) {
+        loadingContainer.textContent = 'No questions found for the selected category. Try another one.';
+        setupContainer.hidden = false;
+        return;
+      }
+
+      questions = data.results.map(q => {
+        const answers = [...q.incorrect_answers, q.correct_answer];
+        return {
+          question: decodeHTML(q.question),
+          correct: decodeHTML(q.correct_answer),
+          answers: shuffleArray(answers.map(decodeHTML))
+        };
+      });
+
+      currentQuestionIndex = 0;
+      score = 0;
+      loadingContainer.textContent = '';
+      quizContainer.hidden = false;
+      showQuestion();
+    } catch (e) {
+      loadingContainer.textContent = 'Failed to load questions. Please try again.';
+      setupContainer.hidden = false;
+      console.error(e);
+    }
+  }
+
+  // Show current question and answers
+  function showQuestion() {
+    resetState();
+    const currentQuestion = questions[currentQuestionIndex];
+    questionNumber.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    questionText.textContent = currentQuestion.question;
+
+    currentQuestion.answers.forEach(answer => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.textContent = answer;
+      btn.addEventListener('click', selectAnswer);
+      li.appendChild(btn);
+      answersList.appendChild(li);
+    });
+  }
+
+  // Reset UI state for new question
+  function resetState() {
+    nextBtn.style.display = 'none';
+    while (answersList.firstChild) {
+      answersList.removeChild(answersList.firstChild);
+    }
+  }
+
+  // Handle answer selection
+  function selectAnswer(e) {
+    const selectedBtn = e.target;
+    const currentQuestion = questions[currentQuestionIndex];
+    const isCorrect = selectedBtn.textContent === currentQuestion.correct;
+
+    Array.from(answersList.children).forEach(li => {
+      const btn = li.firstChild;
+      btn.disabled = true;
+      if(btn.textContent === currentQuestion.correct){
+        btn.classList.add('correct');
+      }
+      if(btn === selectedBtn && !isCorrect){
+        btn.classList.add('wrong');
+      }
+    });
+
+    if (isCorrect) score++;
+    nextBtn.style.display = 'block';
+  }
+
+  // Go to next question or show score if quiz ended
+  function handleNext() {
+    currentQuestionIndex++;
+    if(currentQuestionIndex < questions.length){
+      showQuestion();
+    } else {
+      showScore();
+    }
+  }
+
+  // Show final score and restart option
+  function showScore() {
+    quizContainer.hidden = true;
+    scoreContainer.hidden = false;
+    scoreText.textContent = score;
+    totalText.textContent = questions.length;
+  }
+
+  // Restart quiz: reset UI and selections
+  function restartQuiz() {
+    scoreContainer.hidden = true;
+    setupContainer.hidden = false;
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startQuiz);
+  nextBtn.addEventListener('click', handleNext);
+  restartBtn.addEventListener('click', restartQuiz);
+
+  // Load categories on page load
+  loadCategories();
+</script>
+</body>
+</html>
+
